@@ -5,7 +5,7 @@ import json
 
 app = Flask(__name__)
 
-API_BASE_URL = "http://localhost:8082/api/"
+API_BASE_URL = "https://www.nube.com.br/api/"
 
 @app.route("/api/documentos", methods=["GET"])
 def listar_documentos():
