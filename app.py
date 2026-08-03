@@ -153,5 +153,53 @@ def gerar_rescisao():
         content_type="application/json"
     )
 
+@app.route("/api/documentos/aprovacao", methods=["POST"])
+def aprovacao():
+    # Recupera dados enviados no body (JSON)
+    payload = request.get_json(silent=True) or {}
+
+    estudante = payload.get("estudante") or {}
+    contrato = payload.get("contrato") or {}
+
+    # Validação mínima: o que a API rejeita com status 400
+    obrigatorios = (
+        ("estudante.nome", estudante.get("nome")),
+        ("estudante.cpf", estudante.get("cpf")),
+        ("contrato.cnpj_contratacao", contrato.get("cnpj_contratacao")),
+        ("contrato.data_inicio", contrato.get("data_inicio")),
+        ("contrato.bolsa_auxilio", contrato.get("bolsa_auxilio")),
+    )
+
+    faltando = [campo for campo, valor in obrigatorios if not valor]
+
+    if faltando:
+        return Response(
+            f"Parâmetros obrigatórios não informados: {', '.join(faltando)}",
+            status=400
+        )
+
+    # Endpoint correto da API externa
+    url_request = f"{API_BASE_URL}documentos/aprovacao"
+
+    # Payload que será enviado para a API externa. Os demais campos da ficha
+    # (RG, endereço, escolaridade, dependentes, supervisor, representante,
+    # auxílio transporte, atividades) são repassados como recebidos; o que
+    # faltar volta na lista "pendencias" do retorno.
+    data = {
+        "estudante": estudante,
+        "contrato": contrato
+    }
+
+    response = requests.post(
+        url=url_request, auth=AuthAD(url=url_request, query=json.dumps(data)),
+        json=data
+    )
+
+    return Response(
+        response.content,
+        status=response.status_code,
+        content_type="application/json"
+    )
+
 if __name__ == "__main__":
     app.run(debug=True)
