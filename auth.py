@@ -1,13 +1,14 @@
 from requests.auth import AuthBase
 import hashlib
 import base64
+import os
 
 
 class AuthAD(AuthBase):
     """Assina cada requisição à Nube com o cabeçalho security-hash."""
     def __init__(self, url: str, query: str):
-        self.SECRET = '<SECRET>'
-        self.TOKEN = '<TOKEN>'
+        self.SECRET = os.environ.get('NUBE_SECRET', '<SECRET>')
+        self.TOKEN = os.environ.get('NUBE_TOKEN', '<TOKEN>')
         self.URL_REQUEST = url
         self.QUERY_REQUEST = query
 
