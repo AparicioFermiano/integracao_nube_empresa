@@ -4,7 +4,7 @@ import base64
 
 
 class AuthAD(AuthBase):
-    """Classe para autenticação Nube."""
+    """Assina cada requisição à Nube com o cabeçalho security-hash."""
     def __init__(self, url: str, query: str):
         self.SECRET = '<SECRET>'
         self.TOKEN = '<TOKEN>'

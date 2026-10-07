@@ -9,13 +9,11 @@ API_BASE_URL = "https://www.nube.com.br/api/"
 
 def repassar_get_para_nube(caminho, timeout):
     """Repassa o GET para `caminho` na Nube, assinado, e devolve a resposta."""
-    # Query exatamente como recebida (sem ?)
+    # A assinatura usa a query crua, como chegou (sem o ?).
     query_string = request.query_string.decode()
 
-    # Endpoint correto
     url_request = f"{API_BASE_URL}{caminho}"
 
-    # Auth customizada
     auth = AuthAD(
         url=url_request,
         query=query_string
@@ -53,7 +51,6 @@ def donwload():
 
 @app.route("/api/rescisao/gerar_rescisao", methods=["POST"])
 def gerar_rescisao():
-    # Recupera dados enviados no body (JSON)
     payload = request.get_json(silent=True) or {}
 
     id_documento = payload.get("id_documento")
@@ -61,17 +58,14 @@ def gerar_rescisao():
     id_motivo_rescisao = payload.get("id_motivo_rescisao")
     estagiario_efetivado = payload.get("estagiario_efetivado", False)
 
-    # Validação mínima (opcional, mas recomendado)
     if not id_documento or not id_motivo_rescisao:
         return Response(
             "Parâmetros obrigatórios não informados",
             status=400
         )
 
-    # Endpoint correto da API externa
     url_request = f"{API_BASE_URL}rescisao/gerar_rescisao"
 
-    # Payload que será enviado para a API externa
     data = {
         "id_documento": id_documento,
         "data_rescisao": data_rescisao,
