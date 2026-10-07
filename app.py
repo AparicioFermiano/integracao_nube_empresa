@@ -75,7 +75,8 @@ def gerar_rescisao():
 
     response = requests.post(
         url=url_request, auth=AuthAD(url=url_request, query=json.dumps(data)),
-        json=data
+        json=data,
+        timeout=30
     )
 
     return Response(
