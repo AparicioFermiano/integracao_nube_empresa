@@ -7,15 +7,13 @@ app = Flask(__name__)
 
 API_BASE_URL = "https://www.nube.com.br/api/"
 
-@app.route("/api/documentos", methods=["GET"])
-def listar_documentos():
-    # Query exatamente como recebida (sem ?)
+def repassar_get_para_nube(caminho, timeout):
+    """Repassa o GET para `caminho` na Nube, assinado, e devolve a resposta."""
+    # A assinatura usa a query crua, como chegou (sem o ?).
     query_string = request.query_string.decode()
 
-    # Endpoint correto
-    url_request = f"{API_BASE_URL}documentos/"
+    url_request = f"{API_BASE_URL}{caminho}"
 
-    # Auth customizada
     auth = AuthAD(
         url=url_request,
         query=query_string
@@ -25,98 +23,34 @@ def listar_documentos():
         url_request,
         params=request.args,
         auth=auth,
-        timeout=10
+        timeout=timeout
     )
 
-    # Se a API externa retornar JSON → repassa direto
-    if response.headers.get("Content-Type", "").startswith("application/json"):
-        return Response(
-            response.content,
-            status=response.status_code,
-            content_type="application/json"
-        )
+    # JSON volta como application/json puro, sem charset; o resto, como veio.
+    content_type = response.headers.get("Content-Type", "text/plain")
+    if content_type.startswith("application/json"):
+        content_type = "application/json"
 
-    # Caso não seja JSON, repassa o erro cru
     return Response(
         response.content,
         status=response.status_code,
-        content_type=response.headers.get("Content-Type", "text/plain")
+        content_type=content_type
     )
+
+@app.route("/api/documentos", methods=["GET"])
+def listar_documentos():
+    return repassar_get_para_nube("documentos/", timeout=10)
 
 @app.route("/api/documentos/dados_gerais", methods=["GET"])
 def listar_dados_gerais():
-    # Query exatamente como recebida (sem ?)
-    query_string = request.query_string.decode()
-
-    # Endpoint correto
-    url_request = f"{API_BASE_URL}documentos/dados_gerais"
-
-    # Auth customizada
-    auth = AuthAD(
-        url=url_request,
-        query=query_string
-    )
-
-    response = requests.get(
-        url_request,
-        params=request.args,
-        auth=auth,
-        timeout=30
-    )
-
-    # Se a API externa retornar JSON → repassa direto
-    if response.headers.get("Content-Type", "").startswith("application/json"):
-        return Response(
-            response.content,
-            status=response.status_code,
-            content_type="application/json"
-        )
-
-    # Caso não seja JSON, repassa o erro cru
-    return Response(
-        response.content,
-        status=response.status_code,
-        content_type=response.headers.get("Content-Type", "text/plain")
-    )
+    return repassar_get_para_nube("documentos/dados_gerais", timeout=30)
 
 @app.route("/api/documentos/download", methods=["GET"])
 def donwload():
-    query_string = request.query_string.decode()
-
-    # Endpoint correto
-    url_request = f"{API_BASE_URL}documentos/download"
-
-    # Auth customizada
-    auth = AuthAD(
-        url=url_request,
-        query=query_string
-    )
-
-    response = requests.get(
-        url_request,
-        params=request.args,
-        auth=auth,
-        timeout=30
-    )
-
-    # Se a API externa retornar JSON → repassa direto
-    if response.headers.get("Content-Type", "").startswith("application/json"):
-        return Response(
-            response.content,
-            status=response.status_code,
-            content_type="application/json"
-        )
-
-    # Caso não seja JSON, repassa o erro cru
-    return Response(
-        response.content,
-        status=response.status_code,
-        content_type=response.headers.get("Content-Type", "text/plain")
-    )
+    return repassar_get_para_nube("documentos/download", timeout=30)
 
 @app.route("/api/rescisao/gerar_rescisao", methods=["POST"])
 def gerar_rescisao():
-    # Recupera dados enviados no body (JSON)
     payload = request.get_json(silent=True) or {}
 
     id_documento = payload.get("id_documento")
@@ -124,17 +58,14 @@ def gerar_rescisao():
     id_motivo_rescisao = payload.get("id_motivo_rescisao")
     estagiario_efetivado = payload.get("estagiario_efetivado", False)
 
-    # Validação mínima (opcional, mas recomendado)
     if not id_documento or not id_motivo_rescisao:
         return Response(
             "Parâmetros obrigatórios não informados",
             status=400
         )
 
-    # Endpoint correto da API externa
     url_request = f"{API_BASE_URL}rescisao/gerar_rescisao"
 
-    # Payload que será enviado para a API externa
     data = {
         "id_documento": id_documento,
         "data_rescisao": data_rescisao,
@@ -144,7 +75,8 @@ def gerar_rescisao():
 
     response = requests.post(
         url=url_request, auth=AuthAD(url=url_request, query=json.dumps(data)),
-        json=data
+        json=data,
+        timeout=30
     )
 
     return Response(
@@ -154,4 +86,4 @@ def gerar_rescisao():
     )
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()

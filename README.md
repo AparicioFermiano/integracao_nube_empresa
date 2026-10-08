@@ -13,13 +13,14 @@ python -m venv .venv
 .venv/bin/pip install flask requests        # Windows: .venv\Scripts\pip install flask requests
 ```
 
-Preencha `SECRET` e `TOKEN` em `auth.py` com as credenciais da Nube. **Não commite as credenciais reais.**
+As credenciais da Nube entram pelas variáveis de ambiente `NUBE_SECRET` e `NUBE_TOKEN`; sem elas, `auth.py` assina com os marcadores `<SECRET>` e `<TOKEN>`. **Não commite as credenciais reais.**
 
 ```bash
+export NUBE_SECRET='...' NUBE_TOKEN='...'   # Windows (PowerShell): $env:NUBE_SECRET='...'; $env:NUBE_TOKEN='...'
 .venv/bin/python app.py                     # Windows: .venv\Scripts\python app.py
 ```
 
-A API sobe em <http://localhost:5000> (modo debug).
+A API sobe em <http://localhost:5000>. Para depurar, defina `FLASK_DEBUG=1` antes de subir: isso liga o debugger do Werkzeug, que executa código pelo navegador e mostra as variáveis (credenciais inclusive). Só na sua máquina.
 
 ## Endpoints
 
